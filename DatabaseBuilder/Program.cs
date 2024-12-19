@@ -25,8 +25,12 @@ if (!File.Exists(filePath))
 
 Console.WriteLine("Deserializing json file...");
 string test = Path.Join(folderPath, "one_object.json");
-string json = File.ReadAllText(test);
-// string json = File.ReadAllText(filePath);
+// string json = File.ReadAllText(test);
+string json = File.ReadAllText(filePath);
+var settings = new Newtonsoft.Json.JsonSerializerSettings
+{
+    MissingMemberHandling = Newtonsoft.Json.MissingMemberHandling.Error
+};
 var foodItems = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, DatabaseBuilder.Services.FoundationFoodItem[]>>(json)!["FoundationFoods"];
 
 Console.WriteLine("Building database...");
@@ -37,44 +41,47 @@ using FoodsContext context = new(connectionString);
 context.Database.EnsureDeleted();
 context.Database.EnsureCreated();
 
+// FoodCategory[] foodCategories = foodItems
+//     .SelectMany(i => i.InputFoods)
+//     .Select(f => f.InputFood.AdditionalProperties.TryGetValue("foodCategory", out var category) && category is JObject jObject ? jObject.ToObject<DatabaseBuilder.Services.FoodCategory>() : null)
+//     .Where(c => c != null)
+//     .Select(a => a.ToEntity())
+//     .DistinctBy(e => e.Id)
+//     .Where(e => e.Id != default)
+//     .ToArray();
+
+// context.FoodCategories.AddRange(foodCategories);
+// context.SaveChanges();
+
 FoundationFood[] foundationFoods = foodItems
-    .Select(x => x.ToEntity())
+    .Select(i => i.ToEntity())
     .ToArray();
 
-Nutrient[] nutrients = foodItems
-    .SelectMany(x => x.FoodNutrients)
-    .Select(x => x.Nutrient.ToEntity())
-    .DistinctBy(x => x.Id)
-    .ToArray();
-
-context.AddRange(nutrients);
+context.FoundationFoods.AddRange(foundationFoods);
 context.SaveChanges();
 
-// FoodNutrientSource[] foodNutrientSources = foodItems
-//     .SelectMany(x => x.FoodNutrients)
-//     .Select(x => x.FoodNutrientDerivation.FoodNutrientSource)
-//     .DistinctBy(x => x.Id)
-//     .ToArray();
+Nutrient[] nutrients = foodItems
+    .SelectMany(i => i.FoodNutrients)
+    .Select(fn => fn.Nutrient.ToEntity())
+    .DistinctBy(e => e.Id)
+    .ToArray();
 
-// context.FoodNutrientSources.AddRange(foodNutrientSources);
-// context.SaveChanges();
+context.Nutrients.AddRange(nutrients);
+context.SaveChanges();
 
-// FoodCategory[] foodAttributes = foodItems
-//     .SelectMany(x => x.InputFoods)
-//     .SelectMany(x => x.InputFood.FoodAttributes)
-//     .DistinctBy(x => x.Id)
-//     .ToArray();
+FoodNutrient[] foodNutrients = foodItems
+    .SelectMany(i => i.FoodNutrients
+        .Select(n => 
+        {
+            var e = n.ToEntity(); // Mapping step
+            e.FoundationFoodId = i.FdcId;
+            return e;
+        }))
+    .DistinctBy(e => e.Id) // Remove duplicates
+    .ToArray();
 
-// context.AddRange(foodNutrientSources);
-// context.SaveChanges();
-
-// FoodNutrient[] foodNutrients = foodItems
-//     .SelectMany(x => x.FoodNutrients)
-//     .Select(x => x.ToEntity())
-//     .ToArray();
-
-// context.FoodNutrients.AddRange(foodNutrients);
-// context.SaveChanges();
+context.FoodNutrients.AddRange(foodNutrients);
+context.SaveChanges();
 
 async Task DownloadFoodData(string zipFileName, string zipFilePath)
 {

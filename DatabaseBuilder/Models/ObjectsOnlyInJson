@@ -1,0 +1,36 @@
+namespace DatabaseBuilder.Models;
+
+/// <summary>
+///  Top level type for all types of nutrient conversion factors. A separate row is stored for each of these 3 types of conversion factor.
+/// </summary>
+public class food_nutrient_conversion_factor
+{
+    int id;
+    int fdc_id; // ID of the food that this food nutrient conversion factor pertains to
+}
+
+/// <summary>
+/// The multiplication factors to be used when calculating energy from macronutrients for a specific food
+/// </summary>
+public class food_calorie_conversion_factor
+{
+    int food_nutrient_conversion_factor_id;
+    decimal protein_value; // The multiplication factor for protein
+    decimal fat_value; // The multiplication factor for fat
+    decimal carbohydrate_value; // The multiplication factor for carbohydrates
+}
+
+/// <summary>
+/// Factor to calculate total lipid fat (204)
+/// </summary>
+public class food_fat_conversion_factor
+{
+    int food_nutrient_conversion_factor_id;
+    decimal fat_nlea_value; // The multiplication factor to convert from fat NLEA (298) to total fat (204)
+}
+
+public class food_protein_conversion_factor
+{
+    int food_nutrient_conversion_factor_id;
+    decimal value; //  The multiplication factor used to calculate protein from nitrogen
+}

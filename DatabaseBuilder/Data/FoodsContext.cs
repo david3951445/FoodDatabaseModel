@@ -5,10 +5,13 @@ namespace DatabaseBuilder.Data;
 
 public class FoodsContext : DbContext
 {
-    // public DbSet<FoundationFood> FoundationFoods { get; set; }
-    public DbSet<FoodNutrient> FoodNutrients { get; set; }
-    // public DbSet<FoodNutrientSource> FoodNutrientSources { get; set; }
     private readonly string _connectionString;
+
+    public DbSet<FoundationFood> FoundationFoods { get; set; }
+    public DbSet<FoodNutrient> FoodNutrients { get; set; }
+    public DbSet<Nutrient> Nutrients { get; set; }
+    public DbSet<FoodCategory> FoodCategories { get; set; }
+    // public DbSet<FoodNutrientSource> FoodNutrientSources { get; set; }
 
     public FoodsContext(string connectionString)
     {
